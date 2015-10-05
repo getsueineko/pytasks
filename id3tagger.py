@@ -14,6 +14,7 @@ ARTIST = 30
 ALBUM = 30
 YEAR = 4
 
+
 def list_mp3(mp3_folder):
     print "Reading folder: %s" % mp3_folder
     result = []
@@ -27,8 +28,9 @@ def list_mp3(mp3_folder):
 
 
 def mp3info(file_list):
+    result = []
     for f in file_list:
-        print "Attemp to read Idv3 tags from: %s" % f
+        #print "Attemp to read Idv3 tags from: %s" % f
         mfile = open(f, "rb")
         mfile.seek(TAG)
         name = mfile.read(NAME)
@@ -38,28 +40,36 @@ def mp3info(file_list):
         album = mfile.read(ALBUM)
         mfile.seek(TAG + NAME + ARTIST + ALBUM)
         year = mfile.read(YEAR)
-        print "Full name of track: %s" % artist + name + album + year  
+        result.append({
+            "Name": name,
+            "Artist": artist,
+            "Album": album,
+            "Year": year
+        })
+    return result
 
-#def output_list():
-#    RESULT = ['artist','name','album','year']
-#    resultFile = open("playlist.csv",'wb')
-#    wr = csv.writer(resultFile, dialect='excel')
-#    wr.writerow(RESULT)
-#    output_file.close()
 
-#Function in which I have to set name of directory
-#def output_dir():
-#    newDirName =
-#if os.path.exists(path):
-#   то сюда, наверное вызов заданного ключом пути
-#else:   
-#    os.mkdir(newDirName)
+def csv_maker(fullpath, mp3_list, fieldnames):
+    with open(fullpath, 'wb') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        #Name;Artist;Album....
+        for item in mp3_list:
+            writer.writerow(item)
+
+
+
+
+def validate(path):
+    if not path.endswith("/"):
+        path = path + "/"
+    return path
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Idv3 tags')
     parser.add_argument('-f', '--folder', dest='folder', type=str, required=True, help='Folder to scan')
-    parser.add_argument('-o', '--output', dest='folder', type=str, required=False, help='Folder to result')
+    parser.add_argument('-o', '--output', dest='out_folder', type=str, required=False, help='Folder to result')
     args = parser.parse_args()
 
     #List of filtred mp3's
@@ -67,9 +77,18 @@ if __name__ == "__main__":
 
     #Read files
     result = mp3info(filelist)
+    print "Files found: %d" % len(result)
 
+    #Validate path
+    path = validate(args.out_folder)
+    filename = path + "123.csv"
+    print "Output: " + filename
 
-# Добавить в командную строку аргумент "output", это будет путь к файл в который пишется результат в CSV
+    #Fieldnames
+    fieldnames = ["Artist", "Name", "Album", "Year"]
+
+    #Run
+    data = csv_maker(filename, result, fieldnames)
 
 
 
